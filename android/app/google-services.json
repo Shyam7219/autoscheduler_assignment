@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "683705974771",
+    "project_id": "scheduler-assignment",
+    "storage_bucket": "scheduler-assignment.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:683705974771:android:717b75a06e7d80cc149c86",
+        "android_client_info": {
+          "package_name": "com.example.autoscheduler_assignment"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpp3AQYb-CXtiwP72ewpFgpnhi7fVLMAI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
