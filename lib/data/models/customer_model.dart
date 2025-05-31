@@ -1,5 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/customer.dart';
 
 class CustomerModel extends Customer {
@@ -8,28 +8,27 @@ class CustomerModel extends Customer {
     required super.name,
     required super.latitude,
     required super.longitude,
-    required super.recurringTimes,
+    super.recurringTimes = const [],
   });
 
   factory CustomerModel.fromMap(Map<String, dynamic> map, String docId) {
     try {
-      final raw = map['recurringTimes'] as List<dynamic>;
-      final parsedTimes =
-          raw.map((item) {
-            if (item is Timestamp) return item.toDate();
-            if (item is String) return DateTime.parse(item);
-            throw Exception('Invalid recurringTime item: $item');
-          }).toList();
-
+      List<DateTime> recurringTimes = [];
+      if (map['recurringTimes'] != null) {
+        recurringTimes = (map['recurringTimes'] as List)
+            .map((time) => (time as Timestamp).toDate())
+            .toList();
+      }
+      
       return CustomerModel(
         id: docId,
-        name: map['name'] ?? '',
+        name: map['name'] ?? "",
         latitude: map['latitude']?.toDouble() ?? 0.0,
         longitude: map['longitude']?.toDouble() ?? 0.0,
-        recurringTimes: parsedTimes,
+        recurringTimes: recurringTimes,
       );
     } catch (e, st) {
-      debugPrint(' Error parsing CustomerModel: $e\n$st');
+      debugPrint('Error parsing CustomerModel: $e\n$st');
       rethrow;
     }
   }
@@ -39,8 +38,7 @@ class CustomerModel extends Customer {
       'name': name,
       'latitude': latitude,
       'longitude': longitude,
-      'recurringTimes':
-          recurringTimes.map((e) => Timestamp.fromDate(e)).toList(),
+      'recurringTimes': recurringTimes.map((time) => Timestamp.fromDate(time)).toList(),
     };
   }
 }

@@ -1,43 +1,49 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:autoscheduler_assignment/domain/entities/appointment.dart';
-import 'package:autoscheduler_assignment/providers.dart';
+import 'package:get/get.dart';
+import '../../domain/entities/appointment_summary.dart';
+import '../../domain/repositories/scheduler_repository.dart';
 
-class SummaryData {
-  final Appointment appointment;
-  final double distanceKm;
-  final Duration travelTime;
-  final double cost;
+class SummaryViewModel extends GetxController {
+  final SchedulerRepository _repository = Get.find<SchedulerRepository>();
 
-  SummaryData({
-    required this.appointment,
-    required this.distanceKm,
-    required this.travelTime,
-    required this.cost,
-  });
-}
+  final RxBool isLoading = false.obs;
+  final Rx<List<AppointmentSummary>> summaryData =
+      Rx<List<AppointmentSummary>>([]);
+  final RxString error = ''.obs;
 
-// Currently uses dummy distance, time, and cost values.
-// logic will be replace with real Google Directions API calls if needed.
-final summaryViewModelProvider =
-    FutureProvider.family<List<SummaryData>, String>((ref, employeeId) async {
-      final repo = ref.watch(schedulerRepositoryProvider);
-      final appointments = await repo.getAppointmentsForEmployee(employeeId);
+  Future<List<AppointmentSummary>> getSummaryForEmployee(
+      String employeeId) async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+
+      final appointments =
+          await _repository.getAppointmentsForEmployee(employeeId);
 
       const mileageRate = 0.45; // £/km
       const hourlyRate = 15.0; // £/hour
 
       // Dummy calculations for summary
-      return appointments.map((appointment) {
+      final result = appointments.map((appointment) {
         const distance = 5.0; // in kilometers
         const duration = Duration(minutes: 30); // travel time
         final cost =
             (distance * mileageRate) + (duration.inMinutes / 60) * hourlyRate;
 
-        return SummaryData(
+        return AppointmentSummary(
           appointment: appointment,
           distanceKm: distance,
           travelTime: duration,
           cost: cost,
         );
       }).toList();
-    });
+
+      summaryData.value = result;
+      return result;
+    } catch (e) {
+      error.value = e.toString();
+      return [];
+    } finally {
+      isLoading.value = false;
+    }
+  }
+}

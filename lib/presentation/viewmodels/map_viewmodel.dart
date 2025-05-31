@@ -1,10 +1,30 @@
-import 'package:autoscheduler_assignment/data/models/employee_model.dart';
-import 'package:autoscheduler_assignment/providers.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
+import '../../domain/entities/employee.dart';
+import '../../domain/repositories/scheduler_repository.dart';
 
-final employeeLocationProvider = FutureProvider<List<EmployeeModel>>((
-  ref,
-) async {
-  final repo = ref.watch(schedulerRepositoryProvider);
-  return await repo.getEmployees();
-});
+class MapViewModel extends GetxController {
+  final SchedulerRepository _repository = Get.find<SchedulerRepository>();
+  
+  final RxBool isLoading = true.obs;
+  final Rx<List<Employee>> employees = Rx<List<Employee>>([]);
+  final RxString error = ''.obs;
+  
+  @override
+  void onInit() {
+    super.onInit();
+    fetchEmployees();
+  }
+  
+  Future<void> fetchEmployees() async {
+    try {
+      isLoading.value = true;
+      final result = await _repository.getEmployees();
+      employees.value = result;
+      error.value = '';
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
+  }
+}

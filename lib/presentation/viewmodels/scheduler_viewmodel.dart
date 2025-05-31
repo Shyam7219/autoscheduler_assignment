@@ -1,45 +1,66 @@
-import 'package:autoscheduler_assignment/providers.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import '../../domain/entities/appointment.dart';
 import '../../domain/usecases/assign_appointments.dart';
 import '../../domain/repositories/scheduler_repository.dart';
 
-final schedulerViewModelProvider =
-    StateNotifierProvider<SchedulerViewModel, AsyncValue<List<Appointment>>>((
-      ref,
-    ) {
-      final assigner = ref.watch(assignAppointmentsProvider);
-      final repository = ref.watch(schedulerRepositoryProvider);
-      return SchedulerViewModel(assigner, repository);
-    });
+class SchedulerViewModel extends GetxController {
+  final AssignAppointmentsUseCase _assignUseCase = Get.find<AssignAppointmentsUseCase>();
+  final SchedulerRepository _repository = Get.find<SchedulerRepository>();
+  
+  final RxBool isLoading = false.obs;
+  final Rx<List<Appointment>> appointments = Rx<List<Appointment>>([]);
+  final RxString error = ''.obs;
 
-class SchedulerViewModel extends StateNotifier<AsyncValue<List<Appointment>>> {
-  final AssignAppointmentsUseCase assignUseCase;
-  final SchedulerRepository repository;
+  @override
+  void onInit() {
+    super.onInit();
+    loadAppointments();
+  }
 
-  SchedulerViewModel(this.assignUseCase, this.repository)
-    : super(const AsyncLoading());
+  Future<void> loadAppointments() async {
+    try {
+      isLoading.value = true;
+      error.value = '';
+      
+      final employees = await _repository.getEmployees();
+      final List<Appointment> allAppointments = [];
+      
+      for (final employee in employees) {
+        final employeeAppointments = await _repository.getAppointmentsForEmployee(employee.id);
+        allAppointments.addAll(employeeAppointments);
+      }
+      
+      appointments.value = allAppointments;
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   Future<void> loadAndAssignAppointments(DateTime date) async {
     try {
-      state = const AsyncLoading();
+      isLoading.value = true;
+      error.value = '';
 
-      final employees = await repository.getEmployees();
-      final customers = await repository.getCustomers();
+      final employees = await _repository.getEmployees();
+      final customers = await _repository.getCustomers();
 
-      final appointments = assignUseCase.assign(
+      final result = _assignUseCase.assign(
         customers: customers,
         employees: employees,
         date: date,
       );
 
-      for (var appointment in appointments) {
-        await repository.createAppointment(appointment);
+      for (var appointment in result) {
+        await _repository.createAppointment(appointment);
       }
 
-      state = AsyncData(appointments);
-    } catch (e, st) {
-      state = AsyncError(e, st);
+      await loadAppointments();
+    } catch (e) {
+      error.value = e.toString();
+    } finally {
+      isLoading.value = false;
     }
   }
 }

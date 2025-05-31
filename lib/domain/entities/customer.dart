@@ -10,6 +10,6 @@ class Customer {
     required this.name,
     required this.latitude,
     required this.longitude,
-    required this.recurringTimes,
+    this.recurringTimes = const [],
   });
 }

@@ -9,6 +9,8 @@ class AppointmentModel extends Appointment {
     required super.employeeId,
     required super.customerId,
     required super.time,
+    super.duration = const Duration(minutes: 30),
+    super.status = 'scheduled',
   });
 
   factory AppointmentModel.fromMap(Map<String, dynamic> map, String docId) {
@@ -29,6 +31,8 @@ class AppointmentModel extends Appointment {
         employeeId: map['employeeId'] ?? '',
         customerId: map['customerId'] ?? '',
         time: parsedTime,
+        duration: Duration(minutes: map['duration'] ?? 30),
+        status: map['status'] ?? 'scheduled',
       );
     } catch (e, st) {
       debugPrint(' Error parsing AppointmentModel: $e\n$st');
@@ -41,6 +45,8 @@ class AppointmentModel extends Appointment {
       'employeeId': employeeId,
       'customerId': customerId,
       'time': Timestamp.fromDate(time),
+      'duration': duration.inMinutes,
+      'status': status,
     };
   }
 }
