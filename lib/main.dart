@@ -10,11 +10,9 @@ void main() async {
 
   try {
     await Firebase.initializeApp();
-    debugPrint('Firebase initialized');
-    
     await _updateMissingNames();
   } catch (e) {
-    debugPrint('Firebase init failed: $e');
+    throw Exception('Error initializing Firebase: $e');
   }
 
   DependencyInjection.init();
@@ -24,24 +22,21 @@ void main() async {
 
 Future<void> _updateMissingNames() async {
   final firestore = FirebaseFirestore.instance;
-  
-  await firestore
-      .collection('employees')
-      .doc('e1')
-      .update({'name': 'shyam patil'})
-      .catchError((e) => debugPrint('Error updating e1: $e'));
 
   await firestore
       .collection('employees')
-      .doc('e2')
-      .update({'name': 'rock'})
-      .catchError((e) => debugPrint('Error updating e2: $e'));
+      .doc('e1')
+      .update({'name': 'shyam patil'}).catchError(
+          (e) => debugPrint('Error updating e1: $e'));
+
+  await firestore.collection('employees').doc('e2').update(
+      {'name': 'rock'}).catchError((e) => debugPrint('Error updating e2: $e'));
 
   await firestore
       .collection('customers')
       .doc('c1')
-      .update({'name': 'dr. patel'})
-      .catchError((e) => debugPrint('Error updating c1: $e'));
+      .update({'name': 'dr. patel'}).catchError(
+          (e) => debugPrint('Error updating c1: $e'));
 }
 
 class AutoSchedulerApp extends StatelessWidget {
